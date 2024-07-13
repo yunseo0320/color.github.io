@@ -8,10 +8,34 @@
 <body>
     <form action="/calculate" method="post">
         <label for="birthdate">생년월일(YYYYMMDD):</label>
-        <input type="text" id="birthdate" name="birthdate" required>
+        <input type="text" id="birthdate" name="birthdate" pattern="[0-9]{8}" title="8자리 숫자를 입력하세요 (예: 20230101)" required>
+        <br><br>
         <button type="submit">계산하기</button>
     </form>
+
+    <!-- 결과 표시 -->
+    <div id="result" style="margin-top: 20px;"></div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(event) {
+            event.preventDefault(); // 기본 동작 중단
+            var birthdate = document.getElementById('birthdate').value;
+            var formData = new FormData();
+            formData.append('birthdate', birthdate);
+
+            fetch('/calculate', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('result').innerHTML = data;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
 </body>
 </html>
-
 

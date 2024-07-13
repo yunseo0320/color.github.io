@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, render_template_string
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # CORS 설정
 
 # 컬러 매핑
 color_mapping = {
@@ -89,76 +91,57 @@ def index():
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Color Calculation</title>
+            <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+            <script>
+                function calculateColors() {
+                    var birthdate = document.getElementById('birthdate').value;
+                    
+                    axios.post('http://localhost:5000/calculate', { birthdate: birthdate })
+                        .then(function (response) {
+                            var data = response.data;
+                            var resultElement = document.getElementById('result');
+                            resultElement.innerHTML = `
+                                <h2>생년월일에 따른 컬러 결과</h2>
+                                <p>첫 번째 컬러: ${data.first_color_name_1}-${data.first_color_name_2} 
+                                    <span style="color: ${data.first_color_color_1}; background-color: ${data.first_color_color_2}; padding: 5px;">
+                                        예시 텍스트
+                                    </span>
+                                </p>
+                                <p>두 번째 컬러: ${data.second_color_name_1}-${data.second_color_name_2} 
+                                    <span style="color: ${data.second_color_color_1}; background-color: ${data.second_color_color_2}; padding: 5px;">
+                                        예시 텍스트
+                                    </span>
+                                </p>
+                                <p>세 번째 컬러: ${data.third_color_name_1}-${data.third_color_name_2} 
+                                    <span style="color: ${data.third_color_color_1}; background-color: ${data.third_color_color_2}; padding: 5px;">
+                                        예시 텍스트
+                                    </span>
+                                </p>
+                            `;
+                        })
+                        .catch(function (error) {
+                            console.error('Error:', error);
+                        });
+                }
+            </script>
         </head>
         <body>
-            <form id="colorForm" action="/calculate" method="post">
+            <form>
                 <label for="birthdate">생년월일(YYYYMMDD):</label>
                 <input type="text" id="birthdate" name="birthdate" pattern="[0-9]{8}" title="8자리 숫자를 입력하세요 (예: 20230101)" required>
                 <br><br>
-                <button type="submit">계산하기</button>
+                <button type="button" onclick="calculateColors()">계산하기</button>
             </form>
-
-            <!-- 결과 표시 -->
-            <div id="result" style="margin-top: 20px;"></div>
-
-            <script>
-                document.getElementById('colorForm').addEventListener('submit', function(event) {
-                    event.preventDefault(); // 기본 동작 중단
-                    var birthdate = document.getElementById('birthdate').value;
-                    var formData = new FormData();
-                    formData.append('birthdate', birthdate);
-
-                    fetch('/calculate', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        var first_color_name_1 = data.first_color_name_1;
-                        var first_color_name_2 = data.first_color_name_2;
-                        var second_color_name_1 = data.second_color_name_1;
-                        var second_color_name_2 = data.second_color_name_2;
-                        var third_color_name_1 = data.third_color_name_1;
-                        var third_color_name_2 = data.third_color_name_2;
-                        var first_color_color_1 = data.first_color_color_1;
-                        var first_color_color_2 = data.first_color_color_2;
-                        var second_color_color_1 = data.second_color_color_1;
-                        var second_color_color_2 = data.second_color_color_2;
-                        var third_color_color_1 = data.third_color_color_1;
-                        var third_color_color_2 = data.third_color_color_2;
-
-                        var resultDiv = document.getElementById('result');
-                        resultDiv.innerHTML = `
-                            <h2>생년월일에 따른 컬러 결과</h2>
-                            <p>첫 번째 컬러: ${first_color_name_1}-${first_color_name_2} 
-                                <span style="color: ${first_color_color_1}; background-color: ${first_color_color_2}; padding: 5px;">
-                                    예시 텍스트
-                                </span>
-                            </p>
-                            <p>두 번째 컬러: ${second_color_name_1}-${second_color_name_2} 
-                                <span style="color: ${second_color_color_1}; background-color: ${second_color_color_2}; padding: 5px;">
-                                    예시 텍스트
-                                </span>
-                            </p>
-                            <p>세 번째 컬러: ${third_color_name_1}-${third_color_name_2} 
-                                <span style="color: ${third_color_color_1}; background-color: ${third_color_color_2}; padding: 5px;">
-                                    예시 텍스트
-                                </span>
-                            </p>
-                        `;
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-                });
-            </script>
+            
+            <div id="result"></div>
         </body>
         </html>
     """)
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
-    birthdate = request.form['birthdate']
+    data = request.get_json()
+    birthdate = data['birthdate']
 
     # 두 번째 컬러 계산: 8자리 생년월일의 각 자릿수를 모두 더한 값
     second_color = sum(int(digit) for digit in birthdate)
@@ -195,7 +178,7 @@ def calculate():
         'second_color_color_1': second_color_color_1,
         'second_color_color_2': second_color_color_2,
         'third_color_color_1': third_color_color_1,
-        'third_color_color_2': third_color_color_2,
+        'third_color_color_2': third_color_color_2
     })
 
 if __name__ == '__main__':

@@ -93,12 +93,14 @@ def index():
         <body>
             <form action="/calculate" method="post">
                 <label for="birthdate">생년월일(YYYYMMDD):</label>
-                <input type="text" id="birthdate" name="birthdate" required>
+                <input type="text" id="birthdate" name="birthdate" pattern="[0-9]{8}" title="8자리 숫자를 입력하세요 (예: 20230101)" required>
+                <br><br>
                 <button type="submit">계산하기</button>
             </form>
         </body>
         </html>
     """)
+
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
